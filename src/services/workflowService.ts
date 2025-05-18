@@ -11,7 +11,7 @@ export const callWorkflowApi = async (
   query: string,
   sessionId: string // Add sessionId parameter
 ): Promise<WorkflowApiResponse> => {
-  const apiUrl = 'http://localhost:5000/chat'; // Your backend API endpoint
+  const apiUrl = 'https://modelselector-backend-1051022814597.us-central1.run.app/chat'; // Your backend API endpoint
 
   try {
     const response = await fetch(apiUrl, {
