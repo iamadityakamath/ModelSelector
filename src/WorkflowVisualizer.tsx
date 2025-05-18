@@ -61,7 +61,7 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
       
       {active && (
         <div
-          className={`mt-1 p-3 rounded-md ${colors.bgLight} ${colors.border} border ${colors.text} w-full text-sm transition-all duration-300 animate-fadeIn overflow-auto flex-grow`} /* Removed max-w, min-h, added flex-grow, adjusted mt */
+          className={`mt-1 p-3 rounded-md ${colors.bgLight} ${colors.border} border ${colors.text} w-full text-sm transition-all duration-300 animate-fadeIn overflow-auto flex-grow text-center`} /* Removed max-w, min-h, added flex-grow, adjusted mt, added text-center */
         >
           {content || (loading ? 'Processing...' : 'Waiting for input...')}
         </div>
@@ -218,7 +218,7 @@ const WorkflowVisualizer: React.FC = () => {
         <div className="w-full md:w-2/3 bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-6 text-slate-800">Process</h2>
           <div className="flex flex-col items-center">
-            <div className="flex flex-col sm:flex-row justify-between items-start w-full mb-8 relative"> {/* Changed items-center to items-start */}
+            <div className="flex flex-col items-center sm:flex-row sm:items-start justify-between w-full mb-8 relative"> {/* Centered items for mobile, start-aligned for sm and up */}
               {/* Connection lines */}
               <div className="hidden sm:block absolute top-8 left-0 right-0 h-0.5 bg-slate-200 -z-10"></div> {/* Adjusted top position */}
               
