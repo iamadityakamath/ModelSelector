@@ -9,17 +9,26 @@ export interface WorkflowApiResponse {
 // Function to call the backend workflow API
 export const callWorkflowApi = async (
   query: string,
-  sessionId: string // Add sessionId parameter
+  sessionId: string,
+  apiKey: string
 ): Promise<WorkflowApiResponse> => {
   const apiUrl = 'https://modelselector-backend-1051022814597.us-central1.run.app/chat'; // Your backend API endpoint
+  const normalizedApiKey = apiKey.trim().replace(/^Bearer\s+/i, '');
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (normalizedApiKey) {
+    headers.Authorization = `Bearer ${normalizedApiKey}`;
+    headers['x-api-key'] = normalizedApiKey;
+  }
 
   try {
     const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query, sessionId }), // Include sessionId in the body
+      headers,
+      body: JSON.stringify({ query, sessionId }),
     });
 
     if (!response.ok) {
