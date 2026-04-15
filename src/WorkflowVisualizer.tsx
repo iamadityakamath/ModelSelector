@@ -16,12 +16,20 @@ import {
 } from 'lucide-react';
 import { callGroqWorkflow } from './services/groqService';
 
+interface RecommendationDetails {
+  model: string;
+  tier: string;
+  cost: string;
+  reason: string;
+}
+
 interface WorkflowNodeProps {
   title: string;
   description: string;
   active: boolean;
   loading: boolean;
   content: string;
+  details?: RecommendationDetails;
   tone: 'blue' | 'violet' | 'emerald';
   icon: React.ReactNode;
 }
@@ -76,10 +84,12 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
   active,
   loading,
   content,
+  details,
   tone,
   icon,
 }) => {
   const theme = toneMap[tone];
+  const hasDetails = Boolean(details && (details.model || details.tier || details.cost || details.reason));
 
   return (
     <article
@@ -108,9 +118,35 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
           <Sparkles size={13} />
           Live state
         </div>
-        <p className="whitespace-pre-wrap leading-6 text-slate-100">
-          {content || (loading ? 'Processing task...' : 'Waiting for input to start the workflow.')}
-        </p>
+        {hasDetails ? (
+          <div className="mb-3 space-y-3 rounded-xl border border-slate-700/70 bg-slate-900/80 p-3">
+            <div className="grid gap-2">
+              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">Model</p>
+                <p className="mt-1 text-xs font-semibold text-emerald-100">{details?.model || 'Not provided'}</p>
+              </div>
+              <div className="rounded-lg border border-sky-500/30 bg-sky-500/10 px-2.5 py-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sky-300">Tier</p>
+                <p className="mt-1 text-xs font-semibold text-sky-100">{details?.tier || 'Not provided'}</p>
+              </div>
+              <div className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-2.5 py-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-300">Cost</p>
+                <p className="mt-1 text-xs font-semibold text-violet-100">{details?.cost || 'Not provided'}</p>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-slate-700 bg-slate-900/90 px-2.5 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Reason</p>
+              <p className="mt-1 text-xs leading-5 text-slate-200">{details?.reason || 'Not provided'}</p>
+            </div>
+          </div>
+        ) : null}
+        {content ? <p className="whitespace-pre-wrap leading-6 text-slate-100">{content}</p> : null}
+        {!content && !hasDetails ? (
+          <p className="whitespace-pre-wrap leading-6 text-slate-100">
+            {loading ? 'Processing task...' : 'Waiting for input to start the workflow.'}
+          </p>
+        ) : null}
       </div>
     </article>
   );
@@ -127,6 +163,7 @@ const WorkflowVisualizer: React.FC = () => {
     think: '',
     output: '',
   });
+  const [recommendationDetails, setRecommendationDetails] = useState<RecommendationDetails | undefined>(undefined);
   const [loading, setLoading] = useState<Record<string, boolean>>({
     plan: false,
     think: false,
@@ -140,6 +177,7 @@ const WorkflowVisualizer: React.FC = () => {
 
   const resetWorkflow = () => {
     setNodeData({ plan: '', think: '', output: '' });
+    setRecommendationDetails(undefined);
     setActiveNodes([]);
     setLoading({ plan: false, think: false, output: false });
   };
@@ -165,11 +203,25 @@ const WorkflowVisualizer: React.FC = () => {
 
     try {
       const groqResponse = await callGroqWorkflow(query, apiKey);
+      const hasStructuredRecommendation = Boolean(
+        groqResponse.model || groqResponse.tier || groqResponse.cost || groqResponse.reason
+      );
+
+      setRecommendationDetails(
+        hasStructuredRecommendation
+          ? {
+              model: groqResponse.model,
+              tier: groqResponse.tier,
+              cost: groqResponse.cost,
+              reason: groqResponse.reason,
+            }
+          : undefined
+      );
 
       setNodeData({
-        plan: 'Prompt sent to Groq for workflow generation.',
-        think: 'Model response received and being prepared for display.',
-        output: groqResponse,
+        plan: groqResponse.plan || 'No structured plan was provided by the model.',
+        think: groqResponse.think || 'No structured reasoning was provided by the model.',
+        output: hasStructuredRecommendation ? '' : `Raw response:\n${groqResponse.raw}`,
       });
       setActiveNodes([0, 1, 2]);
       setLoading({ plan: false, think: false, output: false });
@@ -181,6 +233,7 @@ const WorkflowVisualizer: React.FC = () => {
         think: 'The response could not be generated.',
         output: 'Check the API key and try again.',
       });
+      setRecommendationDetails(undefined);
       setActiveNodes([0, 1, 2]);
       setLoading({ plan: false, think: false, output: false });
       setIsProcessing(false);
@@ -206,8 +259,8 @@ const WorkflowVisualizer: React.FC = () => {
   };
 
   return (
-    <div className="grid w-full gap-6 lg:min-h-[calc(100vh-14.5rem)] lg:grid-cols-[minmax(340px,38vw)_minmax(0,1fr)]">
-      <section className="rounded-[2rem] border border-white/70 bg-white/75 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:p-7 lg:h-full">
+    <div className="grid h-full min-h-0 w-full gap-4 lg:grid-cols-[minmax(340px,38vw)_minmax(0,1fr)]">
+      <section className="flex min-h-0 flex-col gap-4 overflow-y-auto rounded-[2rem] border border-white/70 bg-white/75 p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:p-6 lg:h-full">
         <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -254,7 +307,7 @@ const WorkflowVisualizer: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
@@ -272,11 +325,11 @@ const WorkflowVisualizer: React.FC = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-4 space-y-3">
 
           <div className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm transition focus-within:border-sky-300 focus-within:ring-4 focus-within:ring-sky-100">
             <textarea
-              className="min-h-40 w-full resize-none border-0 bg-transparent p-2 text-[15px] leading-7 text-slate-900 outline-none placeholder:text-slate-400"
+              className="min-h-28 w-full resize-none border-0 bg-transparent p-2 text-[15px] leading-7 text-slate-900 outline-none placeholder:text-slate-400"
               placeholder="Paste the prompt you want to send to Groq."
               rows={6}
               value={query}
@@ -322,7 +375,7 @@ const WorkflowVisualizer: React.FC = () => {
           </form>
         </div>
 
-        <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-950 p-4 text-slate-100">
+        <div className="rounded-[1.5rem] border border-slate-200 bg-slate-950 p-4 text-slate-100">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
             <Clock3 size={14} />
             What happens next
@@ -388,7 +441,7 @@ const WorkflowVisualizer: React.FC = () => {
         </div>
       ) : null}
 
-      <section className="rounded-[2rem] border border-white/70 bg-white/70 p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:p-6 lg:h-full">
+      <section className="min-h-0 overflow-y-auto rounded-[2rem] border border-white/70 bg-white/70 p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:p-6 lg:h-full">
         <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
@@ -440,6 +493,7 @@ const WorkflowVisualizer: React.FC = () => {
             active={activeNodes.includes(2)}
             loading={loading.output}
             content={nodeData.output}
+            details={recommendationDetails}
             tone="emerald"
             icon={<ShieldCheck size={20} />}
           />
