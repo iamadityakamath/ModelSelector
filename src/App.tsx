@@ -1,6 +1,6 @@
 import React from 'react';
 import WorkflowVisualizer from './WorkflowVisualizer';
-import { BarChart3, BrainCircuit, Sparkles } from 'lucide-react';
+import { BarChart3, BrainCircuit, Github, Sparkles } from 'lucide-react';
 
 function App() {
   return (
@@ -26,9 +26,20 @@ function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-600 sm:text-sm">
-            <BarChart3 size={16} className="text-sky-600" />
-            Cost-aware, capability-aware, and built for clear decisions.
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-600 sm:text-sm">
+              <BarChart3 size={16} className="text-sky-600" />
+              Cost-aware, capability-aware, and built for clear decisions.
+            </div>
+            <a
+              href="https://github.com/iamadityakamath/ModelSelector"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Open GitHub repository"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-900 bg-slate-950 text-white shadow-[0_10px_30px_-18px_rgba(15,23,42,0.55)] transition hover:bg-slate-800"
+            >
+              <Github size={18} />
+            </a>
           </div>
         </div>
       </header>
